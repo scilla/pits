@@ -33,6 +33,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
 	"chat.apps.ChatConfig",
 	"ai.apps.AiConfig",
+    "frontend.apps.FrontendConfig",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -57,7 +58,9 @@ ROOT_URLCONF = "pits.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [
+			str(BASE_DIR / "templates"),
+        ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
