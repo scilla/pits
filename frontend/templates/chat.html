@@ -14,6 +14,7 @@
     justify-content: flex-start;
     height: 100vh;
     max-height: 600px;
+	max-width: 600px;
     width: 100%;
     background-color: #f4f4f4;
     padding: 20px;
@@ -60,6 +61,16 @@
       opacity: 0;
     }
   }
+  #messages {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    width: 100%;
+    overflow-y: auto;
+    overflow-wrap: anywhere;
+  }
 </style>
 {% endblock extrahead %} {% block content %}
 
@@ -69,98 +80,109 @@
     <span id="inputField">[Human]: </span><span class="blinking-cursor"></span>
   </div>
 </div>
-<div>
-  <h3>data</h3>
-  <span id="data"></span>
-</div>
-
 <script>
   const HUMAN_LABEL = "[Human]: ";
   const PITS_LABEL = "[Pits]: ";
+
   const getChatId = () => {
-	const parsedUrl = new URL(window.location.href);
-	const path = parsedUrl.pathname.endsWith('/')
-	  ? parsedUrl.pathname.slice(0, -1)
-	  : parsedUrl.pathname;
-	return path.split('/').pop();
+    const parsedUrl = new URL(window.location.href);
+    const path = parsedUrl.pathname.endsWith("/")
+      ? parsedUrl.pathname.slice(0, -1)
+      : parsedUrl.pathname;
+    return path.split("/").pop();
   };
 
-  const getMessages = (chat_id) => {
-	const response = fetch(`http://localhost:8000/chat/${chat_id}/messages/`, {
-	  method: "GET",
-	})
-	  .then((response) => response.json())
-	  .then((data) => {
-		console.log(data);
-		data.forEach((message) => {
-		  let newMessageNode = document.createElement("div");
-		  newMessageNode.textContent = (message.is_human ? HUMAN_LABEL : PITS_LABEL) + message.content;
-		  messages.appendChild(newMessageNode);
-		});
-	  });
+  const appendMessage = (content, label, container) => {
+    const newMessageNode = document.createElement("div");
+    newMessageNode.textContent = label + content;
+    container.appendChild(newMessageNode);
   };
-  
-  let inputTexts = [];
-  let currentText = "";
-  let is_human = true;
-  const wrapper = document.getElementById("wrapper");
-  const inputField = document.getElementById("inputField");
-  const inputArea = document.getElementById("inputArea");
-  const data = document.getElementById("data");
-  const messages = document.getElementById("messages");
-  const chat_id = getChatId();
-  getMessages(chat_id);
 
-  wrapper.addEventListener("keydown", (event) => {
-    if (
-      event.key.length > 1 &&
-      event.key !== "Backspace" &&
-      event.key !== "Enter"
-    ) {
-      event.preventDefault();
-      return;
+  const fetchJson = async (url, options = {}) => {
+    try {
+      const response = await fetch(url, options);
+      if (!response.ok) throw new Error("Network response was not ok");
+      return await response.json();
+    } catch (error) {
+      console.error("There was a problem with the fetch operation:", error);
     }
-    if (event.key === "Enter") {
-      let newMessageNode = document.createElement("div");
-      currentText = currentText.trim();
-      newMessageNode.textContent = HUMAN_LABEL + currentText;
-      messages.appendChild(newMessageNode);
-      inputTexts.push([is_human, currentText]);
-	  sendNewMessage(currentText, chat_id);
-      currentText = "";
-      inputField.textContent = HUMAN_LABEL;
-      data.textContent = JSON.stringify(inputTexts);
-      is_human = !is_human;
-      event.preventDefault();
-    } else if (event.key === "Backspace") {
-      if (!inputField.textContent.endsWith("\n")) {
+  };
+
+  const getMessages = async (chat_id) => {
+    const data = await fetchJson(
+      `http://localhost:8000/chat/${chat_id}/messages/`
+    );
+    if (data) {
+      data.forEach((message) => {
+        appendMessage(
+          message.content,
+          message.is_human ? HUMAN_LABEL : PITS_LABEL,
+          messages
+        );
+      });
+    }
+  };
+
+  const sendNewMessage = async (content, chat_id, isHuman) => {
+    console.log(content);
+    const postResponse = await fetchJson("http://localhost:8000/message/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content, chat: chat_id, is_human: isHuman }),
+    });
+    if (postResponse) {
+      const data = await fetchJson(`http://localhost:8000/ai/${chat_id}/`);
+      if (data) {
+        appendMessage(data.content, PITS_LABEL, messages);
+      }
+    }
+  };
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const wrapper = document.getElementById("wrapper");
+    const inputField = document.getElementById("inputField");
+    const messages = document.getElementById("messages");
+    const chat_id = getChatId();
+    getMessages(chat_id);
+
+    let currentText = "";
+    let is_human = true;
+
+    wrapper.addEventListener("keydown", (event) => {
+      if (
+        event.key.length > 1 &&
+        event.key !== "Backspace" &&
+        event.key !== "Enter"
+      ) {
+        event.preventDefault();
+        return;
+      }
+      if (event.key === "Enter") {
+        event.preventDefault();
+        currentText = currentText.trim();
+        if (currentText) {
+          appendMessage(
+            currentText,
+            is_human ? HUMAN_LABEL : PITS_LABEL,
+            messages
+          );
+          sendNewMessage(currentText, chat_id, is_human);
+          currentText = "";
+          inputField.textContent = "";
+          is_human = !is_human;
+        }
+      } else if (
+        event.key === "Backspace" &&
+        !inputField.textContent.endsWith("\n")
+      ) {
         inputField.textContent = inputField.textContent.slice(0, -1);
         currentText = currentText.slice(0, -1);
+      } else if (event.key.length === 1) {
+        inputField.textContent += event.key;
+        currentText += event.key;
       }
-    } else if (event.key.length === 1) {
-      inputField.textContent += event.key;
-      currentText += event.key;
-    }
+    });
   });
-
-  const sendNewMessage = (content, chat_id) => {
-	console.log(content);
-    const response = fetch("http://localhost:8000/message/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ content, chat: chat_id, is_human: true }),
-    })
-      .then((response) => {
-		response.json()
-		.then(res => console.log(res));
-	});
-      /* .then((data) => {
-        let newMessageNode = document.createElement("div");
-        newMessageNode.textContent = "[Pits]: " + data.message;
-        messages.appendChild(newMessageNode);
-      });*/
-  };
 </script>
+
 {% endblock content %}
