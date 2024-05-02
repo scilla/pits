@@ -4,9 +4,9 @@ from . import views
 
 urlpatterns = [
 	path("chat/", views.ChatList.as_view()),
-	path("chat/<str:chat_uuid>/", views.ChatDetails.as_view()),
+	path("chat/<str:uuid>/", views.ChatDetails.as_view()),
 	path("message/", views.MessageList.as_view()),
-	path("message/<str:message_uuid>/", views.MessageDetails.as_view()),
+	path("message/<str:uuid>/", views.MessageDetails.as_view()),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
