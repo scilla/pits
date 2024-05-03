@@ -18,7 +18,6 @@ ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
 	"chat.apps.ChatConfig",
-	"ai.apps.AiConfig",
     "frontend.apps.FrontendConfig",
     "django.contrib.admin",
     "django.contrib.auth",
