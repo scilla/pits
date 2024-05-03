@@ -14,7 +14,7 @@
     justify-content: flex-start;
     height: 100vh;
     max-height: 600px;
-	max-width: 600px;
+    max-width: 600px;
     width: 100%;
     background-color: #f4f4f4;
     padding: 20px;
@@ -27,6 +27,7 @@
     border: 1px solid black;
     font-family: "Courier New", monospace;
     font-weight: bold;
+    overflow-y: auto;
   }
   #wrapper:focus {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
@@ -68,7 +69,6 @@
     flex-wrap: nowrap;
     justify-content: flex-start;
     width: 100%;
-    overflow-y: auto;
     overflow-wrap: anywhere;
   }
 </style>
@@ -96,15 +96,16 @@
     const newMessageNode = document.createElement("div");
     newMessageNode.textContent = label + content;
     container.appendChild(newMessageNode);
+    inputField.scrollIntoView({ behavior: "smooth", block: "end" });
   };
 
   const fetchJson = async (url, options = {}) => {
     try {
       const response = await fetch(url, options);
-      if (!response.ok) throw new Error("Network response was not ok");
+      if (!response.ok) throw new Error("Network error");
       return await response.json();
     } catch (error) {
-      console.error("There was a problem with the fetch operation:", error);
+      console.error("Error", error);
     }
   };
 
@@ -123,27 +124,27 @@
     }
   };
 
-  const sendNewMessage = async (content, chat_id, isHuman) => {
-    console.log(content);
+  const sendNewMessage = async (content, chat_id) => {
     const postResponse = await fetchJson("http://localhost:8000/message/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content, chat: chat_id, is_human: isHuman }),
+      body: JSON.stringify({ content, chat: chat_id, is_human: true }),
     });
-    if (postResponse) {
-      const data = await fetchJson(`http://localhost:8000/ai/${chat_id}/`);
-      if (data) {
-        appendMessage(data.content, PITS_LABEL, messages);
-      }
+    if (!postResponse) return;
+    const data = await fetchJson(`http://localhost:8000/ai/${chat_id}/`);
+    if (data) {
+      appendMessage(data.content, PITS_LABEL, messages);
     }
   };
 
   document.addEventListener("DOMContentLoaded", () => {
     const wrapper = document.getElementById("wrapper");
+    const inputArea = document.getElementById("inputArea");
     const inputField = document.getElementById("inputField");
     const messages = document.getElementById("messages");
     const chat_id = getChatId();
     getMessages(chat_id);
+    inputArea.focus();
 
     let currentText = "";
     let is_human = true;
@@ -156,21 +157,22 @@
       ) {
         event.preventDefault();
         return;
-      }
-      if (event.key === "Enter") {
+      } else if (event.key === "Enter") {
+        const currentInputAreaDisplay = inputArea.style.display;
         event.preventDefault();
+        inputArea.style.display = "none";
         currentText = currentText.trim();
-        if (currentText) {
-          appendMessage(
-            currentText,
-            is_human ? HUMAN_LABEL : PITS_LABEL,
-            messages
-          );
-          sendNewMessage(currentText, chat_id, is_human);
-          currentText = "";
-          inputField.textContent = "";
-          is_human = !is_human;
-        }
+        if (!currentText) return;
+        appendMessage(
+          currentText,
+          is_human ? HUMAN_LABEL : PITS_LABEL,
+          messages
+        );
+        sendNewMessage(currentText, chat_id);
+        currentText = "";
+        inputField.textContent = HUMAN_LABEL;
+        inputArea.style.display = currentInputAreaDisplay;
+        inputField.scrollIntoView({ behavior: "smooth", block: "end" });
       } else if (
         event.key === "Backspace" &&
         !inputField.textContent.endsWith("\n")
