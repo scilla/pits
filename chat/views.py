@@ -7,7 +7,7 @@ from .models import Chat, Message
 from .serializers import ChatSerializer, MessageSerializer
 from django.views.generic import TemplateView
 from dotenv import load_dotenv
-from .tools.ai import ai_prompt
+from .tools.ai import AI_PROMPT, MOCK_RESPONSE
 
 load_dotenv()
 
@@ -42,25 +42,29 @@ class MessageDetails(generics.RetrieveUpdateDestroyAPIView):
 
 def get_AI_response(request, *args, **kwargs):
 	chat_uuid = kwargs["uuid"]
-	messages = Message.objects.filter(chat__uuid=chat_uuid)
-	formatted_messages = [
-		{"role": "user" if message.is_human else "assistant", "content": message.content} for message in messages
-	]
-	client = OpenAI(
-		api_key=os.environ.get("OPENAI_API_KEY"),
-	)
-	chat_completion = client.chat.completions.create(
-		messages=[
-			{
-				"role": "system",
-				"content": ai_prompt,
-			}
-		] + formatted_messages,
-		model="gpt-3.5-turbo",
-	)
+	messages = Message.objects.filter(chat__uuid=chat_uuid).order_by("-created_at")
+	if "mock" in messages.first().content:
+		ai_response = MOCK_RESPONSE
+	else:
+		formatted_messages = [
+			{"role": "user" if message.is_human else "assistant", "content": message.content} for message in messages
+		]
+		client = OpenAI(
+			api_key=os.environ.get("OPENAI_API_KEY"),
+		)
+		chat_completion = client.chat.completions.create(
+			messages=[
+				{
+					"role": "system",
+					"content": AI_PROMPT,
+				}
+			] + formatted_messages,
+			model="gpt-3.5-turbo",
+		)
+		ai_response = chat_completion.choices[0].message.content
 	res = Message.objects.create(
 		chat=Chat.objects.get(uuid=chat_uuid),
-		content=chat_completion.choices[0].message.content,
+		content=ai_response,
 		is_human=False,
 	)
 	return redirect(f"/message/{res.uuid}/")

@@ -1,4 +1,4 @@
-marketing_source = '''
+MARKETING_SOURCE = '''
 	Enhance your operational efficiency, reduce costs and request management times, and transform your customer experience (CX) with Pits AI. This powerful tool offers more than 15 AI models designed to meet various needs, allowing for automatic training and native integration with all CRMs and technologies. Get your AI up and running in just a few days without needing to involve your resources.
 	Experience a significant improvement in your service with Pits AI: personalize your assistance, reduce management times by over 80%, and triple your productivity by resolving 95% of incoming requests in a single interaction between operator and customer. Additionally, cut the costs of customer service activities by 70%.
 	Pits AI can be customized and configured to integrate seamlessly into your request management process, ready in just a few days. Explore the diverse models available, including ticket categorization, customer identification, response suggestion, ticket similarity, content moderation, data requests, ticket creation, and ticket routing.
@@ -9,7 +9,7 @@ marketing_source = '''
 	Ready to revolutionize your customer service? Pits AI can integrate with your CRM or be used as a standalone platform to meet your needs. Choose the best solution for your business and discover the future of customer service with Pits AI, designed to be quick, efficient, and focused on enhancing human interaction rather than replacing it.
 '''
 
-ai_prompt = f'''
+AI_PROMPT = f'''
 	Construct responses based on the input received, keeping them informative and concise,
 	focusing on helping the user make informed business decisions. Utilize the existing
 	textual data from the website's commercial and marketing materials to provide accurate
@@ -22,6 +22,8 @@ ai_prompt = f'''
 	Use the following marketing material to generate responses
 
 	### Marketing ###
-	{marketing_source}
+	{MARKETING_SOURCE}
 	######
 '''
+
+MOCK_RESPONSE = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
