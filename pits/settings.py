@@ -10,7 +10,7 @@ MEDIA_URL = "/media/"
 
 SECRET_KEY = "=o26vrf%x1&p4j_v0q5zed(xifc98#*spqou4dciyw))_s$xfe"
 
-DEBUG = True
+DEBUG = os.environ.get("DJANGO_DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = ["*"]
 
