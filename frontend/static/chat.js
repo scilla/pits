@@ -28,7 +28,7 @@ const fetchJson = async (url, options = {}) => {
 
 const getMessages = async (chat_id) => {
   const data = await fetchJson(
-    `http://localhost:8000/chat/${chat_id}/messages/`
+    `/chat/${chat_id}/messages/`
   );
   if (data) {
     data.forEach((message) => {
