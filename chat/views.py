@@ -3,13 +3,13 @@ from django.shortcuts import redirect
 from django.contrib.staticfiles import finders
 from openai import OpenAI
 from rest_framework import generics
+
+from pits.settings import OPENAI_API_KEY
 from .models import Chat, Message
 from .serializers import ChatSerializer, MessageSerializer
 from django.views.generic import TemplateView
 from dotenv import load_dotenv
 from .tools.ai import AI_PROMPT, MOCK_RESPONSE
-
-load_dotenv()
 
 
 class ChatList(generics.ListCreateAPIView):
@@ -43,7 +43,7 @@ class MessageDetails(generics.RetrieveUpdateDestroyAPIView):
 
 def get_completion(formatted_messages):
 	client = OpenAI(
-		api_key=os.environ.get("OPENAI_API_KEY"),
+		api_key=OPENAI_API_KEY,
 	)
 	chat_completion = client.chat.completions.create(
 		messages=[
