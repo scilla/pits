@@ -42,13 +42,13 @@ const getMessages = async (chat_id) => {
 };
 
 const sendNewMessage = async (content, chat_id) => {
-  const postResponse = await fetchJson("http://localhost:8000/message/", {
+  const postResponse = await fetchJson("/message/", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ content, chat: chat_id, is_human: true }),
   });
   if (!postResponse) return;
-  const data = await fetchJson(`http://localhost:8000/ai/${chat_id}/`);
+  const data = await fetchJson(`/ai/${chat_id}/`);
   if (data) {
     appendMessage(data.content, PITS_LABEL, messages);
   }
