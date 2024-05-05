@@ -48,20 +48,6 @@
   #inputArea {
     display: flex;
   }
-  .blinking-cursor {
-    display: inline-block;
-    width: 10px;
-    height: 20px;
-    background-color: black;
-    margin-left: 5px;
-    animation: blink 1s step-end infinite;
-    opacity: 1;
-  }
-  @keyframes blink {
-    50% {
-      opacity: 0;
-    }
-  }
   #messages {
     display: flex;
     flex-direction: column;
@@ -71,13 +57,27 @@
     width: 100%;
     overflow-wrap: anywhere;
   }
+  .cursor {
+    display: inline-block;
+    width: 0.5em;
+    height: 1em;
+    background-color: black;
+    animation: blink 1s step-start 0s infinite;
+  }
+  @keyframes blink {
+    50% {
+      opacity: 0;
+    }
+  }
 </style>
 {% endblock extrahead %} {% block content %}
 
 <div id="wrapper" tabindex="0">
   <div id="messages"></div>
   <div id="inputArea">
-    <span id="inputField">[Human]: </span><span class="blinking-cursor"></span>
+    <div id="inputField">
+      <span id="textInput">[Human]: </span><span class="cursor"></span>
+    </div>
   </div>
 </div>
 <script>
@@ -96,7 +96,7 @@
     const newMessageNode = document.createElement("div");
     newMessageNode.textContent = label + content;
     container.appendChild(newMessageNode);
-    inputField.scrollIntoView({ behavior: "smooth", block: "end" });
+    wrapper.scrollTo(0, wrapper.scrollHeight);
   };
 
   const fetchJson = async (url, options = {}) => {
@@ -141,13 +141,14 @@
     const wrapper = document.getElementById("wrapper");
     const inputArea = document.getElementById("inputArea");
     const inputField = document.getElementById("inputField");
+    const textInput = document.getElementById("textInput");
     const messages = document.getElementById("messages");
+    const cursor = document.getElementsByClassName("cursor")[0];
     const chat_id = getChatId();
     getMessages(chat_id);
-    inputArea.focus();
+    wrapper.focus();
 
     let currentText = "";
-    let is_human = true;
 
     wrapper.addEventListener("keydown", (event) => {
       if (
@@ -165,24 +166,24 @@
         if (!currentText) return;
         appendMessage(
           currentText,
-          is_human ? HUMAN_LABEL : PITS_LABEL,
+          HUMAN_LABEL,
           messages
         );
         sendNewMessage(currentText, chat_id);
         currentText = "";
-        inputField.textContent = HUMAN_LABEL;
+        textInput.textContent = HUMAN_LABEL;
+        textInput.appendChild(cursor);
         inputArea.style.display = currentInputAreaDisplay;
-        inputField.scrollIntoView({ behavior: "smooth", block: "end" });
-      } else if (
-        event.key === "Backspace" &&
-        !inputField.textContent.endsWith("\n")
-      ) {
-        inputField.textContent = inputField.textContent.slice(0, -1);
+      } else if (event.key === "Backspace") {
+        textInput.textContent = textInput.textContent.slice(0, -1);
         currentText = currentText.slice(0, -1);
+        textInput.appendChild(cursor);
       } else if (event.key.length === 1) {
-        inputField.textContent += event.key;
+        textInput.textContent += event.key;
         currentText += event.key;
+        textInput.appendChild(cursor);
       }
+      wrapper.scrollTo(0, wrapper.scrollHeight);
     });
   });
 </script>
