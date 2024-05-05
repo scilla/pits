@@ -4,11 +4,9 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 STATIC_URL = "/static/"
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 MEDIA_URL = "/media/"
 
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-]
 
 SECRET_KEY = "=o26vrf%x1&p4j_v0q5zed(xifc98#*spqou4dciyw))_s$xfe"
 
