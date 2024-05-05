@@ -11,6 +11,7 @@ from .tools.ai import AI_PROMPT, MOCK_RESPONSE
 
 load_dotenv()
 
+
 class ChatList(generics.ListCreateAPIView):
 	queryset = Chat.objects.all()
 	serializer_class = ChatSerializer
@@ -40,28 +41,37 @@ class MessageDetails(generics.RetrieveUpdateDestroyAPIView):
 	serializer_class = MessageSerializer
 
 
+def get_completion(formatted_messages):
+	client = OpenAI(
+		api_key=os.environ.get("OPENAI_API_KEY"),
+	)
+	chat_completion = client.chat.completions.create(
+		messages=[
+			{
+				"role": "system",
+				"content": AI_PROMPT,
+			}
+		]
+		+ formatted_messages,
+		model="gpt-3.5-turbo",
+	)
+	return chat_completion.choices[0].message.content
+
+
 def get_AI_response(request, *args, **kwargs):
 	chat_uuid = kwargs["uuid"]
-	messages = Message.objects.filter(chat__uuid=chat_uuid).order_by("-created_at")
-	if "mock" in messages.first().content:
+	messages = Message.objects.filter(chat__uuid=chat_uuid)
+	if "mock" in messages.last().content:
 		ai_response = MOCK_RESPONSE
 	else:
 		formatted_messages = [
-			{"role": "user" if message.is_human else "assistant", "content": message.content} for message in messages
+			{
+				"role": "user" if message.is_human else "assistant",
+				"content": message.content,
+			}
+			for message in messages
 		]
-		client = OpenAI(
-			api_key=os.environ.get("OPENAI_API_KEY"),
-		)
-		chat_completion = client.chat.completions.create(
-			messages=[
-				{
-					"role": "system",
-					"content": AI_PROMPT,
-				}
-			] + formatted_messages,
-			model="gpt-3.5-turbo",
-		)
-		ai_response = chat_completion.choices[0].message.content
+		ai_response = get_completion(formatted_messages)
 	res = Message.objects.create(
 		chat=Chat.objects.get(uuid=chat_uuid),
 		content=ai_response,
