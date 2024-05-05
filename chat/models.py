@@ -6,7 +6,7 @@ class Chat(models.Model):
 	created_at = models.DateTimeField(auto_now_add=True)
 
 	class Meta:
-		ordering = ["-created_at"]
+		ordering = ["created_at"]
 
 	def __str__(self):
 		return f"Chat {self.uuid}"
@@ -24,7 +24,7 @@ class Message(models.Model):
 	is_human = models.BooleanField()
 
 	class Meta:
-		ordering = ["-created_at"]
+		ordering = ["created_at"]
 
 	def __str__(self):
 		return f"Message {self.uuid} in Chat {self.chat.uuid}"
