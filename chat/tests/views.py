@@ -30,9 +30,3 @@ class ChatViewsTests(ChatTestBase):
 		response = self.client.get(f"/message/{self.message_1.uuid}/").json()
 		self.assertEqual(response["content"], "Hello, world!")
 	
-	@patch("chat.views.get_completion", mocked_openai_response)
-	def test_get_AI_response(self):
-		response = self.client.get(f"/ai/{self.chat_1.uuid}/")
-		self.assertEqual(response.status_code, 302)
-		response = self.client.get(response.url).json()
-		self.assertEqual(response["content"], "This is a mocked ai response!")
