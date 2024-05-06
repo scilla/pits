@@ -1,1 +1,1 @@
-# Introduction project for Spit.ai
+# Introduction project for Sitp.ai
