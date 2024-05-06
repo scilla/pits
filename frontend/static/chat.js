@@ -35,6 +35,7 @@ const appendMessage = (content, is_human, container, delay) => {
 };
 
 const fetchJson = async (url, options = {}) => {
+  options.headers = { ...options.headers, "X-CSRFToken": CSRF_TOKEN };
   try {
     const response = await fetch(url, options);
     if (!response.ok) throw new Error("Network error");
