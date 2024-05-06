@@ -55,6 +55,9 @@ body,html {
   width: 100%;
   overflow-wrap: anywhere;
 }
+#wrapper .human {
+  color: #373d73;
+}
 .cursor {
   display: inline-block;
   width: 0.5em;
