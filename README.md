@@ -1,1 +1,1 @@
-# Cover letter for Spit.ai
+# Introduction project for Spit.ai
