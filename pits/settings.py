@@ -10,8 +10,7 @@ STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 MEDIA_URL = "/media/"
 
-
-SECRET_KEY = "=o26vrf%x1&p4j_v0q5zed(xifc98#*spqou4dciyw))_s$xfe"
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "django-insecure-(lz+q@0(7v#(ueiu2r2_7^#34%-+$u02n^9*vez14ta%z683yh")
 
 DEBUG = os.environ.get("DJANGO_DEBUG", "False") == "True"
 
