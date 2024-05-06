@@ -26,22 +26,20 @@ const fetchJson = async (url, options = {}) => {
   }
 };
 
-const getMessages = async (chat_id) => {
-  const data = await fetchJson(
-    `/chat/${chat_id}/messages/`
-  );
+const getMessages = async (chat_id, container) => {
+  const data = await fetchJson(`/chat/${chat_id}/messages/`);
   if (data) {
     data.forEach((message) => {
       appendMessage(
         message.content,
         message.is_human ? HUMAN_LABEL : PITS_LABEL,
-        messages
+        container
       );
     });
   }
 };
 
-const sendNewMessage = async (content, chat_id) => {
+const sendNewMessage = async (content, chat_id, container) => {
   const postResponse = await fetchJson("/message/", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -50,43 +48,37 @@ const sendNewMessage = async (content, chat_id) => {
   if (!postResponse) return;
   const data = await fetchJson(`/ai/${chat_id}/`);
   if (data) {
-    appendMessage(data.content, PITS_LABEL, messages);
+    appendMessage(data.content, PITS_LABEL, container);
   }
 };
 
 document.addEventListener("DOMContentLoaded", () => {
   const wrapper = document.getElementById("wrapper");
   const inputArea = document.getElementById("inputArea");
-  const inputField = document.getElementById("inputField");
   const textInput = document.getElementById("textInput");
   const messages = document.getElementById("messages");
   const cursor = document.getElementsByClassName("cursor")[0];
   const chat_id = getChatId();
-  getMessages(chat_id);
+  getMessages(chat_id, messages);
   wrapper.focus();
 
   let currentText = "";
 
   wrapper.addEventListener("keydown", (event) => {
-    if (
-      event.key.length > 1 &&
-      event.key !== "Backspace" &&
-      event.key !== "Enter"
-    ) {
-      event.preventDefault();
-      return;
-    } else if (event.key === "Enter") {
-      const currentInputAreaDisplay = inputArea.style.display;
-      event.preventDefault();
-      inputArea.style.display = "none";
+    event.preventDefault();
+    if (event.key === "Enter") {
       currentText = currentText.trim();
       if (!currentText) return;
+      const currentInputAreaDisplay = inputArea.style.display;
+      inputArea.style.display = "none";
       appendMessage(currentText, HUMAN_LABEL, messages);
-      sendNewMessage(currentText, chat_id);
-      currentText = "";
-      textInput.textContent = HUMAN_LABEL;
-      textInput.appendChild(cursor);
-      inputArea.style.display = currentInputAreaDisplay;
+      sendNewMessage(currentText, chat_id, messages).then(() => {
+        currentText = "";
+        textInput.textContent = HUMAN_LABEL;
+        textInput.appendChild(cursor);
+        inputArea.style.display = currentInputAreaDisplay;
+        wrapper.scrollTo(0, wrapper.scrollHeight);
+      });
     } else if (event.key === "Backspace") {
       textInput.textContent = textInput.textContent.slice(0, -1);
       currentText = currentText.slice(0, -1);
