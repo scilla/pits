@@ -8,7 +8,6 @@ urlpatterns = [
 	path("chat/<uuid:uuid>/messages/", views.ChatMessagesList.as_view(), name="chat-messages-list"),
 	path("message/", views.MessageList.as_view(), name="message-list"),
 	path("message/<uuid:uuid>/", views.MessageDetails.as_view(), name="message-detail"),
-	path("ai/<uuid:uuid>/", views.get_AI_response, name="ai-response"),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

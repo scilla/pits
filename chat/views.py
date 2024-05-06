@@ -1,14 +1,11 @@
 import os
 from django.shortcuts import redirect
-from django.contrib.staticfiles import finders
 from openai import OpenAI
 from rest_framework import generics
 
 from pits.settings import OPENAI_API_KEY
 from .models import Chat, Message
 from .serializers import ChatSerializer, MessageSerializer
-from django.views.generic import TemplateView
-from dotenv import load_dotenv
 from .tools.ai import AI_PROMPT, MOCK_RESPONSE
 from rest_framework.response import Response
 from rest_framework import status
@@ -87,24 +84,3 @@ def get_completion(formatted_messages):
 	)
 	return chat_completion.choices[0].message.content
 
-
-def get_AI_response(request, *args, **kwargs):
-	chat_uuid = kwargs["uuid"]
-	messages = Message.objects.filter(chat__uuid=chat_uuid)
-	if "mock" in messages.last().content:
-		ai_response = MOCK_RESPONSE
-	else:
-		formatted_messages = [
-			{
-				"role": "user" if message.is_human else "assistant",
-				"content": message.content,
-			}
-			for message in messages
-		]
-		ai_response = get_completion(formatted_messages)
-	res = Message.objects.create(
-		chat=Chat.objects.get(uuid=chat_uuid),
-		content=ai_response,
-		is_human=False,
-	)
-	return redirect(f"/message/{res.uuid}/")
