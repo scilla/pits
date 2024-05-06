@@ -1,6 +1,8 @@
 const HUMAN_LABEL = "[Human]: ";
 const PITS_LABEL = "[Pits]: ";
 
+const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay))
+
 const getChatId = () => {
   const parsedUrl = new URL(window.location.href);
   const path = parsedUrl.pathname.endsWith("/")
@@ -9,10 +11,25 @@ const getChatId = () => {
   return path.split("/").pop();
 };
 
-const appendMessage = (content, label, container) => {
+const appendMessage = (content, label, container, delay) => {
   const newMessageNode = document.createElement("div");
-  newMessageNode.textContent = label + content;
+  const wrapper = document.getElementById("wrapper");
+  const typeSpeed = 20;
   container.appendChild(newMessageNode);
+  if (delay) {
+    for (let i = 0; i < content.length; i++) {
+      setTimeout(() => {
+        newMessageNode.textContent = label + content.slice(0, i + 1);
+        wrapper.scrollTo(0, wrapper.scrollHeight);
+      }, i * typeSpeed);
+    }
+    setTimeout(() => {
+      showInputArea();
+      wrapper.scrollTo(0, wrapper.scrollHeight);
+    }, content.length * typeSpeed);
+  } else {
+    newMessageNode.textContent = label + content;
+  }
   wrapper.scrollTo(0, wrapper.scrollHeight);
 };
 
@@ -48,13 +65,20 @@ const sendNewMessage = async (content, chat_id, container) => {
   if (!postResponse) return;
   const data = await fetchJson(`/ai/${chat_id}/`);
   if (data) {
-    appendMessage(data.content, PITS_LABEL, container);
+    appendMessage(data.content, PITS_LABEL, container, true);
   }
 };
 
+const hideInputArea = () => {
+  document.getElementById("inputArea").style.display = "none";
+}
+
+const showInputArea = () => {
+  document.getElementById("inputArea").style.display = "";
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const wrapper = document.getElementById("wrapper");
-  const inputArea = document.getElementById("inputArea");
   const textInput = document.getElementById("textInput");
   const messages = document.getElementById("messages");
   const cursor = document.getElementsByClassName("cursor")[0];
@@ -69,15 +93,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (event.key === "Enter") {
       currentText = currentText.trim();
       if (!currentText) return;
-      const currentInputAreaDisplay = inputArea.style.display;
-      inputArea.style.display = "none";
+      hideInputArea();
       appendMessage(currentText, HUMAN_LABEL, messages);
       sendNewMessage(currentText, chat_id, messages).then(() => {
         currentText = "";
         textInput.textContent = HUMAN_LABEL;
         textInput.appendChild(cursor);
-        inputArea.style.display = currentInputAreaDisplay;
-        wrapper.scrollTo(0, wrapper.scrollHeight);
       });
     } else if (event.key === "Backspace") {
       textInput.textContent = textInput.textContent.slice(0, -1);
