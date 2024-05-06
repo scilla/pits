@@ -61,9 +61,9 @@ const sendNewMessage = async (content, chat_id, container) => {
     body: JSON.stringify({ content, chat: chat_id, is_human: true }),
   });
   if (!postResponse) return;
-  const data = await fetchJson(`/ai/${chat_id}/`);
-  if (data) {
-    appendMessage(data.content, false, container, true);
+  const ai_reply = await fetchJson(`/message/${postResponse.reply}/`);
+  if (ai_reply) {
+    appendMessage(ai_reply.content, false, container, true);
   }
 };
 

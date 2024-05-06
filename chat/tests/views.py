@@ -1,6 +1,5 @@
 from .base import ChatTestBase
 from rest_framework.test import RequestsClient
-from ..views import ChatList, ChatDetails, ChatMessagesList, MessageList, MessageDetails, get_AI_response
 from unittest.mock import patch
 
 def mocked_openai_response(formatted_messages):

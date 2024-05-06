@@ -22,6 +22,7 @@ class Message(models.Model):
 	created_at = models.DateTimeField(auto_now_add=True)
 	chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name="messages")
 	is_human = models.BooleanField()
+	reply = models.ForeignKey("self", on_delete=models.CASCADE, null=True, blank=True)
 
 	class Meta:
 		ordering = ["created_at"]

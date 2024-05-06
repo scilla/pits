@@ -10,7 +10,8 @@ from .serializers import ChatSerializer, MessageSerializer
 from django.views.generic import TemplateView
 from dotenv import load_dotenv
 from .tools.ai import AI_PROMPT, MOCK_RESPONSE
-
+from rest_framework.response import Response
+from rest_framework import status
 
 class ChatList(generics.ListCreateAPIView):
 	queryset = Chat.objects.all()
@@ -33,6 +34,24 @@ class ChatMessagesList(generics.ListAPIView):
 class MessageList(generics.ListCreateAPIView):
 	queryset = Message.objects.all()
 	serializer_class = MessageSerializer
+	
+	def create(self, request, *args, **kwargs):
+		serializer = self.get_serializer(data=request.data)
+		serializer.is_valid(raise_exception=True)
+		self.perform_create(serializer)
+		human_message = Message.objects.get(uuid=serializer.data["uuid"])
+		chat_messages = Message.objects.filter(chat__uuid=serializer.data["chat"])
+		formatted_messages = get_formatted_messages(chat_messages)
+		completion = get_completion(formatted_messages)
+		ai_answer = Message.objects.create(
+			chat=Chat.objects.get(uuid=serializer.data["chat"]),
+			content=completion,
+			is_human=False,
+		)
+		human_message.reply = ai_answer
+		human_message.save()
+		headers = self.get_success_headers(serializer.data)
+		return Response(MessageSerializer(human_message).data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 class MessageDetails(generics.RetrieveUpdateDestroyAPIView):
@@ -40,8 +59,19 @@ class MessageDetails(generics.RetrieveUpdateDestroyAPIView):
 	queryset = Message.objects.all()
 	serializer_class = MessageSerializer
 
+def get_formatted_messages(messages):
+	return [
+		{
+			"role": "user" if message.is_human else "assistant",
+			"content": message.content,
+		}
+		for message in messages
+	]
+
 
 def get_completion(formatted_messages):
+	if "mock" in formatted_messages[-1]["content"]:
+		return MOCK_RESPONSE
 	client = OpenAI(
 		api_key=OPENAI_API_KEY,
 	)
